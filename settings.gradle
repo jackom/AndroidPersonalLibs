@@ -1,3 +1,4 @@
 include ':loglib'
+include ':utilslib'
 include ':app'
 rootProject.name = "AndroidPersonalLibs"
