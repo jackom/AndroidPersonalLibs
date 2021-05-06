@@ -1,12 +1,15 @@
 package com.jackom.loglib.printer
 
-import android.app.Application
+import android.content.Context
 import android.text.TextUtils
 import com.jackom.loglib.LogFacade
 import com.jackom.loglib.LogManager
 import com.jackom.loglib.LogPriority
 import com.quys.utilslib.FileUtil
 import java.io.File
+import java.io.RandomAccessFile
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
@@ -16,7 +19,13 @@ import java.util.concurrent.atomic.AtomicInteger
  * @date：5/1/21 on 8:59 AM
  * @desc：
  */
-class LogFilePrinter private constructor(private val app: Application): ILogPrinter {
+class LogFilePrinter private constructor(context: Context): ILogPrinter {
+
+    private var mCachedPath: String = FileUtil.getFilePath(context)
+
+    private val mCurDate = DATE_FORMAT.format(Date())
+
+    private val mSavedFileName = "$mCurDate.log"
 
     /**
      * Log文件缓存路径
@@ -70,17 +79,24 @@ class LogFilePrinter private constructor(private val app: Application): ILogPrin
 
     override fun printLogs(@LogPriority.Priority priority: Int, tag: String, contents: String) {
         mSingleExecutor.execute {
-            if (!checkFileSavedPath()) {
-                return@execute
+            val savedFilePath = File(mCachedPath, mSavedPath)
+            FileUtil.getFolder(savedFilePath)
+            val savedFile = File(savedFilePath, mSavedFileName)
+            if (!savedFile.exists()) {
+                savedFile.createNewFile()
             }
-
+            //往文件中写入内容
+            val resultContents = "${TIME_FORMAT.format(Date(System.currentTimeMillis()))}, priority is: $priority, tag is: $tag, contents is: $contents"
+            write2File(savedFile, resultContents)
         }
     }
 
-    private fun checkFileSavedPath(): Boolean {
-        val cachePath = FileUtil.getFilePath(app.applicationContext)
-        val file = File(cachePath, mSavedPath)
-        return FileUtil.isFileExist(file)
+    private fun write2File(savedFile: File, contents: String) {
+        //创建一个RandomAccessFile的对象,并指定模式rw，能读能写，
+        //注意：必须是文件，不能是路径
+        val raf = RandomAccessFile(savedFile, "rw")
+        raf.write(contents.toByteArray())
+        raf.close()
     }
 
     override fun isSupport(): Boolean = true
@@ -94,14 +110,18 @@ class LogFilePrinter private constructor(private val app: Application): ILogPrin
 
         private const val DEFAULT_SAVED_PATH = "LogSaved"
 
+        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+        private val TIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+
         @Volatile
         var instance: LogFilePrinter? = null
 
-        fun getInstance(app: Application): LogFilePrinter {
+        fun getInstance(context: Context): LogFilePrinter {
             if (instance == null) {
                 synchronized(LogFilePrinter::class) {
                     if (instance == null) {
-                        instance = LogFilePrinter(app)
+                        instance = LogFilePrinter(context.applicationContext)
                     }
                 }
             }

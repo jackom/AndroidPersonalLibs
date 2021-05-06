@@ -236,8 +236,7 @@ public class FileUtil {
     /**
      * 创建目录
      */
-    public static File getFolder(String dir) {
-        File file = new File(dir);
+    public static File getFolder(File file) {
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -246,6 +245,14 @@ public class FileUtil {
             file.mkdirs();
         }
         return file;
+    }
+
+    /**
+     * 创建目录
+     */
+    public static File getFolder(String dir) {
+        File file = new File(dir);
+        return getFolder(file);
     }
 
     /**
