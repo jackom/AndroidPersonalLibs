@@ -1,4 +1,4 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import java.io.File;
 import java.io.FileInputStream;

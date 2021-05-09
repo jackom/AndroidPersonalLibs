@@ -1,4 +1,4 @@
-package com.quys.utilslib.ext
+package com.jackom.utilslib.ext
 
 import android.os.SystemClock
 import android.view.View

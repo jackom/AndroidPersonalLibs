@@ -1,4 +1,4 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

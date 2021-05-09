@@ -1,4 +1,4 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.quys.utilslib.ext
+package com.jackom.utilslib.ext
 
 import android.app.Activity
 import androidx.databinding.DataBindingUtil

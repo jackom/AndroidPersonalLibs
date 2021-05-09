@@ -1,4 +1,4 @@
-package com.quys.utilslib.ext
+package com.jackom.utilslib.ext
 
 import android.content.Context
 import android.view.View

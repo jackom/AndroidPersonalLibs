@@ -1,4 +1,4 @@
-package com.quys.utilslib
+package com.jackom.utilslib
 
 import android.app.Activity
 import android.content.Context

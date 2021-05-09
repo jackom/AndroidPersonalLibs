@@ -1,4 +1,4 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import android.os.Build;
 import android.text.Html;

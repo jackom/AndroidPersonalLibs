@@ -1,11 +1,17 @@
 package com.jackom.loglib.printer
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.text.TextUtils
+import android.widget.Toast
+import androidx.core.content.PermissionChecker
 import com.jackom.loglib.LogFacade
 import com.jackom.loglib.LogManager
 import com.jackom.loglib.LogPriority
-import com.quys.utilslib.FileUtil
+import com.jackom.utilslib.FileUtil
 import java.io.File
 import java.io.RandomAccessFile
 import java.text.SimpleDateFormat
@@ -19,13 +25,16 @@ import java.util.concurrent.atomic.AtomicInteger
  * @date：5/1/21 on 8:59 AM
  * @desc：
  */
-class LogFilePrinter private constructor(context: Context): ILogPrinter {
+class LogFilePrinter private constructor(private val context: Context): ILogPrinter {
+
+    init {
+        val pkgName = context.packageName
+        FileUtil.initRootName(pkgName.substring(pkgName.lastIndexOf(".") + 1))
+    }
 
     private var mCachedPath: String = FileUtil.getFilePath(context)
 
-    private val mCurDate = DATE_FORMAT.format(Date())
-
-    private val mSavedFileName = "$mCurDate.log"
+    private var mSavedFileName = "${TIME_FORMAT.format(Date())}.log"
 
     /**
      * Log文件缓存路径
@@ -33,6 +42,8 @@ class LogFilePrinter private constructor(context: Context): ILogPrinter {
     private var mSavedPath = DEFAULT_SAVED_PATH
 
     private val mSingleExecutor = Executors.newSingleThreadExecutor(DefaultThreadFactory())
+
+    private val mHandler = Handler(Looper.getMainLooper())
 
     /**
      * The default thread factory.
@@ -79,15 +90,65 @@ class LogFilePrinter private constructor(context: Context): ILogPrinter {
 
     override fun printLogs(@LogPriority.Priority priority: Int, tag: String, contents: String) {
         mSingleExecutor.execute {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (PermissionChecker.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED
+                    || (PermissionChecker.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PermissionChecker.PERMISSION_GRANTED)) {
+                    // 未授予文件夹读写操作权限
+                    mHandler.post {
+                        Toast.makeText(context, "应用未授予文件夹读写操作权限!", Toast.LENGTH_SHORT).show()
+                    }
+                    return@execute
+                }
+            }
+
             val savedFilePath = File(mCachedPath, mSavedPath)
             FileUtil.getFolder(savedFilePath)
-            val savedFile = File(savedFilePath, mSavedFileName)
+            var savedFile = File(savedFilePath, mSavedFileName)
             if (!savedFile.exists()) {
                 savedFile.createNewFile()
             }
+
             //往文件中写入内容
             val resultContents = "${TIME_FORMAT.format(Date(System.currentTimeMillis()))}, priority is: $priority, tag is: $tag, contents is: $contents"
             write2File(savedFile, resultContents)
+
+            //判断当前文件大小是否已经超过1M，是的话就得拆分
+            if (savedFile.length() >= M_CACHE_SIZE) {
+                mSavedFileName = "${TIME_FORMAT.format(Date())}.log"
+                savedFile = File(savedFilePath, mSavedFileName)
+                savedFile.createNewFile()
+            }
+
+            //判断当前存储路径下的文件大小是否已经达到 MAX_CACHE_SIZE
+            val curTotalSize = FileUtil.getDirSize(savedFilePath)
+            if (curTotalSize >= MAX_CACHE_SIZE) {
+                //删除最近最少使用的本地文件
+                deleteLeastUseFiles(savedFilePath)
+            }
+        }
+    }
+
+    /**
+     * 删除最近最少使用的本地文件
+     */
+    private fun deleteLeastUseFiles(savedFilePath: File) {
+        val fileArrys = savedFilePath.listFiles()
+        if (null == fileArrys || fileArrys.isEmpty()) {
+            return
+        }
+        val files = mutableListOf<File>()
+        for (file in fileArrys) {
+            files.add(file)
+        }
+
+        files.sortWith { f1, f2 ->
+            f2.lastModified().compareTo(f1.lastModified())
+        }
+
+        while (savedFilePath.length() >= MAX_CACHE_SIZE) {
+            if (files.size > 0) {
+                files.removeAt(0)
+            }
         }
     }
 
@@ -109,8 +170,6 @@ class LogFilePrinter private constructor(context: Context): ILogPrinter {
         private const val MAX_CACHE_SIZE = 10 * M_CACHE_SIZE
 
         private const val DEFAULT_SAVED_PATH = "LogSaved"
-
-        private val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
         private val TIME_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 

@@ -1,4 +1,4 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -52,7 +52,7 @@ public class FileUtil {
 
     public static final String APK = "apk";
 
-    public static void setRootName(String rootName) {
+    public static void initRootName(String rootName) {
         if (TextUtils.equals(ROOT, DEFAULT_ROOT_PATH)) {
             if (!TextUtils.isEmpty(rootName)) {
                 ROOT = rootName;
@@ -613,6 +613,11 @@ public class FileUtil {
         return file;
     }
 
+    /**
+     * 获取当前文件或目录下的所有文件大小
+     * @param file
+     * @return
+     */
     public static long getDirSize(File file){
         //判断文件是否存在
         if (file.exists()) {
@@ -620,8 +625,11 @@ public class FileUtil {
             if (file.isDirectory()) {
                 File[] children = file.listFiles();
                 long size = 0;
-                for (File f : children)
-                    size += getDirSize(f);
+                if (null != children && children.length > 0) {
+                    for (File f : children) {
+                        size += getDirSize(f);
+                    }
+                }
                 return size;
             } else {
                 return file.length();
@@ -631,7 +639,12 @@ public class FileUtil {
         }
     }
 
-    public static String getFileSize(long size) {
+    /**
+     * 获取格式化后的文件大小
+     * @param size
+     * @return
+     */
+    public static String getFormattedFileSize(long size) {
         if (size <= 0) {
             return "0";
         }

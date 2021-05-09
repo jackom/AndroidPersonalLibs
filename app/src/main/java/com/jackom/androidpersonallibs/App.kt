@@ -5,7 +5,7 @@ import com.google.gson.Gson
 import com.jackom.loglib.LogConfigAbstract
 import com.jackom.loglib.LogManager
 import com.jackom.loglib.printer.LogConsolePrinter
-import com.jackom.loglib.printer.LogViewPrinter
+import com.jackom.loglib.printer.LogFilePrinter
 
 /**
  * @author：jackom
@@ -34,6 +34,6 @@ class App: Application() {
             override fun globalTag(): String {
                 return super.globalTag()
             }
-        }, LogConsolePrinter())
+        }, LogConsolePrinter(), LogFilePrinter.getInstance(this))
     }
 }

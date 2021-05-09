@@ -14,11 +14,11 @@ class LogStackTraceFormatter: ILogFormatter<Array<StackTraceElement>> {
             return "empty stackTraceElements!"
         }
 
-        val sb = StringBuilder("\t |-")
+        val sb = StringBuilder("\t「")
         for (value in stackTraceElements) {
-            sb.append("\n\t\t").append(value.toString())
+            sb.append("\n\t |-\t").append(value.toString())
         }
-        sb.append("\n\t -|")
+        sb.append("\n\t  」")
 
         return sb.toString()
     }

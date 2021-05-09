@@ -1,4 +1,4 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import android.annotation.TargetApi;
 import android.app.Activity;

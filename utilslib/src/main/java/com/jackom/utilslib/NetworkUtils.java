@@ -1,10 +1,9 @@
-package com.quys.utilslib;
+package com.jackom.utilslib;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
-
 
 public class NetworkUtils {
 
